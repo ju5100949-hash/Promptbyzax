@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="brutalism">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>JaxxyJailbreak</title>
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="boot" id="bootScreen">
+  <div class="boot-inner">
+    <div class="boot-loading" id="bootLoading">
+      <h1 class="boot-brand" id="bootBrand">Jaxxy<span>Jailbreak</span></h1>
+      <div class="boot-track"><div class="boot-fill" id="bootFill"></div></div>
+      <div class="boot-meta"><span id="bootLabel">loading</span><span class="pct" id="bootPct">0%</span></div>
+      <p class="boot-status" id="bootStatus"><span class="caret"></span></p>
+    </div>
+    <div class="boot-auth" id="bootAuth">
+      <div class="auth-card">
+        <div class="auth-head">
+          <div class="at">Masuk atau Daftar</div>
+          <div class="as">Pilih jalur: owner untuk kelola sistem, member untuk akses prompt.</div>
+        </div>
+        <div class="auth-tabs">
+          <button class="auth-tab active" data-atab="login">login</button>
+          <button class="auth-tab" data-atab="register">register</button>
+        </div>
+        <form class="auth-form" id="authLoginForm">
+          <div class="field"><label for="al-user">username atau email</label><input type="text" id="al-user" autocomplete="username" spellcheck="false" /></div>
+          <div class="field"><label for="al-pass">password</label><input type="password" id="al-pass" autocomplete="current-password" /></div>
+          <div class="auth-error" id="al-err"></div>
+          <button type="submit" class="btn full">masuk</button>
+        </form>
+        <form class="auth-form hidden" id="authRegisterForm">
+          <div class="field"><label for="ar-user">username</label><input type="text" id="ar-user" autocomplete="username" placeholder="min 3 karakter" spellcheck="false" /></div>
+          <div class="field"><label for="ar-email">email</label><input type="email" id="ar-email" autocomplete="email" placeholder="email@contoh.com" spellcheck="false" /></div>
+          <div class="field"><label for="ar-pass">password</label><input type="password" id="ar-pass" autocomplete="new-password" placeholder="min 4 karakter" /></div>
+          <div class="field"><label for="ar-pass2">konfirmasi password</label><input type="password" id="ar-pass2" autocomplete="new-password" /></div>
+          <div class="auth-error" id="ar-err"></div>
+          <button type="submit" class="btn full">daftar</button>
+        </form>
+        <button class="auth-skip" id="authSkip">masuk sebagai guest</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="menu-btn" id="menuBtn" aria-label="menu">
+      <svg viewBox="0 0 24 24" fill="none"><line x1="4" y1="6" x2="20" y2="6" /><line x1="4" y1="12" x2="20" y2="12" /><line x1="4" y1="18" x2="20" y2="18" /></svg>
+    </button>
+    <div class="logo">Jaxxy<span>Jailbreak</span></div>
+  </div>
+  <div class="topbar-right">
+    <button class="notif-btn" id="notifBtn" aria-label="notifikasi">
+      <svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 4 2 6 2 6H4s2-2 2-6" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>
+      <span class="notif-dot" id="notifDot">0</span>
+    </button>
+    <div class="auth-slot" id="authSlot"></div>
+  </div>
+</header>
+
+<div class="overlay" id="overlay"></div>
+
+<aside class="drawer" id="drawer">
+  <div class="drawer-head"><h2>dashboard</h2><button class="close-btn" id="closeBtn">×</button></div>
+  <nav class="drawer-nav" id="nav">
+    <button class="nav-item" data-target="intro"><span class="idx">01</span> Pengenalan System</button>
+    <button class="nav-item active" data-target="prompts"><span class="idx">02</span> Prompt All</button>
+    <button class="nav-item" data-target="db"><span class="idx">03</span> Status Database</button>
+    <button class="nav-item" data-target="account"><span class="idx">04</span> Akun Anda</button>
+    <button class="nav-item" data-target="verify"><span class="idx">05</span> Verifikasi Member <span class="badge" id="verifyBadge" style="display:none;">member</span></button>
+    <button class="nav-item" data-target="settings"><span class="idx">06</span> Settings Web</button>
+    <button class="nav-item" data-target="owner"><span class="idx">07</span> Panel Owner</button>
+  </nav>
+  <div class="drawer-foot"><span>v1.0</span><span id="dbStatus">connecting</span></div>
+</aside>
+
+<main>
+  <section class="panel" id="panel-intro">
+    <h1 id="introTitle">Pengenalan System</h1>
+    <p class="sub" id="introSubtitle">JaxxyJailbreak Core</p>
+    <div class="card"><h3>Tentang</h3><p id="introBody">JaxxyJailbreak adalah antarmuka pengujian prompt dan orkestrasi sistem.</p></div>
+    <div class="card">
+      <h3>Arsitektur</h3>
+      <div class="kv"><span class="k">core engine</span><span class="v">jaxxy-core 1.4.2</span></div>
+      <div class="kv"><span class="k">storage</span><span class="v" id="dbStorage">supabase · postgres</span></div>
+    </div>
+  </section>
+
+  <section class="panel active" id="panel-prompts">
+    <h1>Prompt All</h1>
+    <p class="sub">Kumpulan Prompt Jailbreak</p>
+    <div class="banner">
+      <img id="bannerImg" src="" alt="banner" loading="lazy" />
+      <div class="banner-text"><span class="tag" id="heroTag">prompt library · v3</span><h2 id="heroTitle">Kumpulan Prompt Jailbreak</h2></div>
+    </div>
+    <div class="prompt-toolbar">
+      <span class="count" id="promptCount">0 prompt</span>
+      <div class="toolbar-right"><input type="text" class="search" id="searchInput" placeholder="cari prompt..." /></div>
+    </div>
+    <div class="prompt-grid" id="promptGrid"></div>
+  </section>
+
+  <section class="panel" id="panel-db">
+    <h1>Status Database</h1>
+    <p class="sub">Koneksi Supabase</p>
+    <div class="card">
+      <h3>Status</h3>
+      <div class="kv"><span class="k">project</span><span class="v" id="dbProject">-</span></div>
+      <div class="kv"><span class="k">supabase</span><span class="v" id="dbSupabase">-</span></div>
+      <div class="kv"><span class="k">prompts</span><span class="v" id="dbPrompts">-</span></div>
+      <div class="kv"><span class="k">users</span><span class="v" id="dbUsers">-</span></div>
+      <div class="kv"><span class="k">redeem</span><span class="v" id="dbRedeem">-</span></div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-account">
+    <h1>Akun Anda</h1>
+    <p class="sub">Profil &amp; aktivitas</p>
+    <div class="card">
+      <h3>Profil</h3>
+      <div class="kv"><span class="k">username</span><span class="v" id="accUsername">guest</span></div>
+      <div class="kv"><span class="k">email</span><span class="v" id="accEmail">-</span></div>
+      <div class="kv"><span class="k">role</span><span class="v" id="accRole">guest</span></div>
+      <div class="kv"><span class="k">status</span><span class="v" id="accStatus">belum login</span></div>
+      <div class="kv"><span class="k">plan</span><span class="v" id="accPlan">free</span></div>
+    </div>
+    <div class="card" id="accountTelegramCard" style="display: none;">
+      <h3>Akses Bot Telegram</h3>
+      <div class="telegram-access" id="accountTelegramAccess"></div>
+    </div>
+    <div class="card" id="accountAuthCard">
+      <h3>Akses</h3>
+      <p style="margin-bottom: 12px;">Login atau buat akun untuk profil lengkap.</p>
+      <button class="btn full" id="accountLoginBtn">login / daftar</button>
+    </div>
+    <div class="card" id="accountSessionCard" style="display: none;">
+      <h3>Sesi</h3>
+      <div class="kv"><span class="k">account id</span><span class="v" id="accUserId">-</span></div>
+      <button class="btn ghost full" id="accountLogoutBtn" style="margin-top: 12px;">logout</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-verify">
+    <h1>Verifikasi Member</h1>
+    <p class="sub">Syarat jadi member</p>
+    <div class="verify-hero" id="verifyHero">
+      <div class="vh-icon"><svg viewBox="0 0 24 24"><path d="M21.5 3.5 2.5 11.2c-.8.3-.8 1.4 0 1.7l5 1.8 1.9 5.7c.2.7 1.1.9 1.6.3l2.8-3.3 5.2 3.8c.6.4 1.4.1 1.6-.6l3-15.3c.2-.9-.7-1.6-1.6-1.2z"/></svg></div>
+      <div class="vh-title">Jadi Member JaxxyJailbreak</div>
+      <div class="vh-sub">Ikuti langkah di bawah. Sistem verifikasi otomatis memakai akun yang sedang login di perangkat ini.</div>
+    </div>
+    <div class="verify-steps" id="verifySteps">
+      <div class="verify-step" id="vstep-1">
+        <span class="vs-num">1</span>
+        <div class="vs-body">
+          <div class="vs-title">Gabung grup</div>
+          <div class="vs-desc">Buka grup telegram, join dulu.</div>
+          <div class="vs-actions"><a class="btn tg" id="stepJoinGroup" href="#" target="_blank">gabung grup</a><button class="btn ghost" id="step1Next">sudah gabung</button></div>
+        </div>
+      </div>
+      <div class="verify-step locked" id="vstep-2">
+        <span class="vs-num">2</span>
+        <div class="vs-body">
+          <div class="vs-title">Ketik /start di bot</div>
+          <div class="vs-desc">Buka bot telegram, ketik <code>/start</code>. Bot kirim token.</div>
+          <div class="vs-actions"><a class="btn tg" id="stepOpenBot" href="#" target="_blank">buka bot</a><button class="btn ghost" id="step2Next">sudah /start</button></div>
+        </div>
+      </div>
+      <div class="verify-step locked" id="vstep-3">
+        <span class="vs-num">3</span>
+        <div class="vs-body">
+          <div class="vs-title">Paste token</div>
+          <div class="vs-desc">Salin token dari bot.</div>
+          <div class="vs-actions" style="flex-direction:column; align-items:stretch;"><input type="text" class="input" id="verifyToken" placeholder="token dari bot" spellcheck="false" /></div>
+        </div>
+      </div>
+      <div class="verify-step locked" id="vstep-4">
+        <span class="vs-num">4</span>
+        <div class="vs-body">
+          <div class="vs-title">Login akun kamu</div>
+          <div class="vs-desc">Pastikan login dengan akun member yang mau diverifikasi. Bukan akun owner.</div>
+          <div class="vs-actions" id="verifyAuthActions"><button class="btn" id="verifyGotoLogin">login akun member</button></div>
+          <div class="vs-actions" id="verifyAuthInfo" style="display:none;"><div style="font-size:11px; color:var(--ok);">login sebagai <strong id="verifySessionUser">-</strong></div></div>
+        </div>
+      </div>
+      <div class="verify-step locked" id="vstep-5">
+        <span class="vs-num">5</span>
+        <div class="vs-body">
+          <div class="vs-title">Konfirmasi</div>
+          <div class="vs-desc">Klik tombol. Role akun yang sedang login akan naik ke member.</div>
+          <div class="vs-actions">
+            <button class="btn" id="verifySubmit">konfirmasi &amp; jadi member</button>
+            <span class="verify-loading" id="verifyLoading" style="display:none;"><span class="spinner"></span>memproses...</span>
+          </div>
+          <div style="margin-top: 10px; font-size: 11px; color: var(--err); min-height: 1em;" id="verifyError"></div>
+        </div>
+      </div>
+    </div>
+    <div class="verify-done" id="verifyDone" style="display:none;">
+      <div class="vd-icon"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <div class="vd-title">Kamu sudah jadi member</div>
+      <div class="vd-desc">Role member aktif. Akses semua prompt dan bot grup.</div>
+      <button class="btn" style="margin-top: 14px;" onclick="switchPanel('account')">buka akun</button>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-settings">
+    <h1>Settings Web</h1>
+    <p class="sub">Preferensi antarmuka</p>
+    <div class="card">
+      <h3>Tema Web</h3>
+      <div class="theme-grid">
+        <button class="theme-option" data-theme="brutalism"><span class="t-check">v</span><div class="theme-preview brutalism"></div><div class="t-name">Neo Brutalism</div><div class="t-desc">krem, garis hitam</div></button>
+        <button class="theme-option" data-theme="monokrom"><span class="t-check">v</span><div class="theme-preview"></div><div class="t-name">Monokrom</div><div class="t-desc">abu gelap</div></button>
+        <button class="theme-option" data-theme="bawaan"><span class="t-check">v</span><div class="theme-preview bawaan"></div><div class="t-name">Bawaan</div><div class="t-desc">hitam pekat</div></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-owner">
+    <h1>Panel Owner</h1>
+    <p class="sub">Manajemen sistem</p>
+    <div id="ownerGate">
+      <div class="card">
+        <h3>Akses Terbatas</h3>
+        <p style="margin-bottom: 12px;">Login sebagai owner untuk mengakses panel ini.</p>
+        <button class="btn full" id="ownerGateLogin">login owner</button>
+      </div>
+    </div>
+    <div id="ownerContent" style="display: none;">
+      <div class="card">
+        <h3>Panel Owner</h3>
+        <p style="margin-bottom: 12px;">Buka panel owner.</p>
+        <button class="btn full" id="openOwnerOverlayBtn">buka panel owner</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="owner-overlay" id="ownerOverlay">
+  <div class="owner-appbar">
+    <button class="owner-back" id="ownerBack">←</button>
+    <div class="owner-appbar-title"><div class="at">Panel Owner</div><div class="as">pilih kategori</div></div>
+    <span class="owner-appbar-badge">owner</span>
+  </div>
+  <div class="owner-scroll">
+    <div class="owner-stats">
+      <div class="stat-box"><div class="sb-label">total user</div><div class="sb-value" id="statTotal">0</div></div>
+      <div class="stat-box"><div class="sb-label">owner</div><div class="sb-value" id="statOwner">0</div></div>
+      <div class="stat-box"><div class="sb-label">prompt</div><div class="sb-value" id="statPrompt">0</div></div>
+      <div class="stat-box"><div class="sb-label">redeem</div><div class="sb-value" id="statRedeem">0</div></div>
+    </div>
+    <div class="owner-grid-menu" id="ownerGridMenu">
+      <button class="owner-grid-card" data-ocard="users"><span class="ogc-icon">U</span><div class="ogc-title">Users</div><div class="ogc-desc">kelola role</div><span class="ogc-count" id="ogcUsers">0</span></button>
+      <button class="owner-grid-card" data-ocard="prompts"><span class="ogc-icon">P</span><div class="ogc-title">Prompt</div><div class="ogc-desc">tambah &amp; edit</div><span class="ogc-count" id="ogcPrompts">0</span></button>
+      <button class="owner-grid-card" data-ocard="telegram"><span class="ogc-icon">T</span><div class="ogc-title">Telegram</div><div class="ogc-desc">grup &amp; bot</div><span class="ogc-count" id="ogcTelegram">-</span></button>
+      <button class="owner-grid-card" data-ocard="redeem"><span class="ogc-icon">R</span><div class="ogc-title">Redeem</div><div class="ogc-desc">kode VIP</div><span class="ogc-count" id="ogcRedeem">0</span></button>
+      <button class="owner-grid-card" data-ocard="notify"><span class="ogc-icon">N</span><div class="ogc-title">Notifikasi</div><div class="ogc-desc">kirim ke user</div><span class="ogc-count" id="ogcNotif">0</span></button>
+      <button class="owner-grid-card" data-ocard="music"><span class="ogc-icon">M</span><div class="ogc-title">Musik</div><div class="ogc-desc">musik latar</div><span class="ogc-count" id="ogcMusic">-</span></button>
+      <button class="owner-grid-card" data-ocard="web"><span class="ogc-icon">W</span><div class="ogc-title">Set Web</div><div class="ogc-desc">banner &amp; teks</div><span class="ogc-count" id="ogcWeb">-</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="owner-sub" id="osub-users">
+  <div class="owner-sub-appbar"><button class="owner-sub-back" data-subclose="users">←</button><div class="owner-sub-title"><div class="st">Users</div><div class="ss">kelola role</div></div></div>
+  <div class="owner-sub-scroll">
+    <div class="owner-sub-card">
+      <div class="osc-title">Tambah User</div>
+      <div class="owner-form">
+        <input type="text" class="input" id="newUserName" placeholder="username" />
+        <select class="input" id="newUserRole"><option value="owner">owner</option><option value="admin">admin</option><option value="partner">partner</option><option value="vip">vip</option><option value="member">member</option></select>
+        <button class="btn" id="addUserBtn">+ tambah</button>
+      </div>
+    </div>
+    <div class="owner-sub-card"><div class="osc-title">Daftar User</div><div class="user-list" id="userList"></div></div>
+  </div>
+</div>
+
+<div class="owner-sub" id="osub-prompts">
+  <div class="owner-sub-appbar"><button class="owner-sub-back" data-subclose="prompts">←</button><div class="owner-sub-title"><div class="st">Prompt</div><div class="ss">tambah &amp; edit</div></div></div>
+  <div class="owner-sub-scroll">
+    <div class="owner-sub-card">
+      <div class="osc-title" id="promptFormTitle">Tambah Prompt Baru</div>
+      <form class="prompt-form" id="promptForm">
+        <input type="hidden" id="pf-index" />
+        <div class="form-grid">
+          <div class="field"><label for="pf-title">judul</label><input type="text" id="pf-title" required /></div>
+          <div class="field"><label for="pf-role">role</label><select id="pf-role"><option value="owner">owner</option><option value="admin">admin</option><option value="partner">partner</option><option value="vip">vip</option><option value="member">member</option></select></div>
+          <div class="field full-col"><label for="pf-desc">deskripsi</label><input type="text" id="pf-desc" required /></div>
+          <div class="field full-col"><label for="pf-tags">tags (pisah koma)</label><input type="text" id="pf-tags" /></div>
+          <div class="field full-col"><label for="pf-body">isi prompt</label><textarea id="pf-body" required></textarea></div>
+        </div>
+        <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:12px; flex-wrap:wrap;">
+          <button type="button" class="btn ghost" id="pf-cancel" style="display:none;">batal edit</button>
+          <button type="submit" class="btn" id="pf-submit">+ tambah prompt</button>
+        </div>
+      </form>
+    </div>
+    <div class="owner-sub-card"><div class="osc-title">Daftar Prompt</div><div class="redeem-list" id="ownerPromptList"></div></div>
+  </div>
+</div>
+
+<div class="owner-sub" id="osub-telegram">
+  <div class="owner-sub-appbar"><button class="owner-sub-back" data-subclose="telegram">←</button><div class="owner-sub-title"><div class="st">Telegram</div><div class="ss">grup &amp; bot</div></div></div>
+  <div class="owner-sub-scroll">
+    <div class="owner-sub-card">
+      <div class="osc-title">Set Grup Telegram</div>
+      <div class="tg-row"><input type="text" class="input" id="tgName" placeholder="nama grup (opsional)" /></div>
+      <div class="tg-row"><input type="url" class="input" id="tgLink" placeholder="https://t.me/grup (opsional)" /></div>
+      <div class="tg-row"><input type="url" class="input" id="tgBot" placeholder="https://t.me/bot (opsional)" /></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn" id="tgSave">simpan</button>
+        <button class="btn ghost" id="tgSkip">skip</button>
+        <button class="btn ghost" id="tgClear">kosongkan</button>
+      </div>
+      <div class="osc-hint">Boleh di-skip. Kalau diisi, member dapat tombol buka bot di panel akun.</div>
+    </div>
+  </div>
+</div>
+
+<div class="owner-sub" id="osub-redeem">
+  <div class="owner-sub-appbar"><button class="owner-sub-back" data-subclose="redeem">←</button><div class="owner-sub-title"><div class="st">Redeem</div><div class="ss">kode VIP / member</div></div></div>
+  <div class="owner-sub-scroll">
+    <div class="owner-sub-card">
+      <div class="osc-title">Buat Kode</div>
+      <div class="redeem-grid">
+        <div class="field"><label for="rd-role">role</label><select id="rd-role"><option value="vip">vip</option><option value="member">member</option></select></div>
+        <div class="field"><label for="rd-days">durasi (hari)</label><input type="number" id="rd-days" min="1" max="3650" value="30" /></div>
+      </div>
+      <div class="field"><label for="rd-count">jumlah kode</label><input type="number" id="rd-count" min="1" max="50" value="1" /></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"><button class="btn" id="rdGenerate">generate</button></div>
+    </div>
+    <div class="owner-sub-card"><div class="osc-title">Daftar Kode</div><div class="redeem-list" id="redeemList"></div></div>
+  </div>
+</div>
+
+<div class="owner-sub" id="osub-notify">
+  <div class="owner-sub-appbar"><button class="owner-sub-back" data-subclose="notify">←</button><div class="owner-sub-title"><div class="st">Notifikasi</div><div class="ss">kirim ke user</div></div></div>
+  <div class="owner-sub-scroll">
+    <div class="owner-sub-card">
+      <div class="osc-title">Kirim Notifikasi</div>
+      <div class="field"><label for="nf-title">judul</label><input type="text" id="nf-title" /></div>
+      <div class="field"><label for="nf-msg">pesan</label><textarea id="nf-msg"></textarea></div>
+      <div class="field"><label for="nf-kind">tipe</label><select id="nf-kind"><option value="info">info</option><option value="success">success</option><option value="warn">warn</option><option value="err">error</option></select></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"><button class="btn" id="nfSend">kirim</button></div>
+    </div>
+    <div class="owner-sub-card"><div class="osc-title">Riwayat</div><div class="redeem-list" id="nfHistory"></div></div>
+  </div>
+</div>
+
+<div class="owner-sub" id="osub-music">
+  <div class="owner-sub-appbar"><button class="owner-sub-back" data-subclose="music">←</button><div class="owner-sub-title"><div class="st">Musik</div><div class="ss">musik latar</div></div></div>
+  <div class="owner-sub-scroll">
+    <div class="owner-sub-card">
+      <div class="osc-title">Set Musik</div>
+      <div class="field"><label for="ms-title">judul</label><input type="text" id="ms-title" /></div>
+      <div class="field"><label for="ms-url">url audio (mp3)</label><input type="url" id="ms-url" /></div>
+      <div class="field"><label for="ms-volume">volume (0-100)</label><input type="number" id="ms-volume" min="0" max="100" value="60" /></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;"><button class="btn" id="msSave">simpan</button><button class="btn ghost" id="msClear">hapus</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="owner-sub" id="osub-web">
+  <div class="owner-sub-appbar"><button class="owner-sub-back" data-subclose="web">←</button><div class="owner-sub-title"><div class="st">Set Web</div><div class="ss">banner &amp; teks</div></div></div>
+  <div class="owner-sub-scroll">
+    <div class="owner-sub-card">
+      <div class="osc-title">Banner</div>
+      <div class="field"><label for="webBanner">url banner</label><input type="url" id="webBanner" /></div>
+      <div style="margin-top: 10px;"><img id="webBannerPreview" src="" alt="" style="width: 100%; border-radius: var(--radius-sm); border: 1px solid var(--line); max-height: 140px; object-fit: cover; display: none;" /></div>
+    </div>
+    <div class="owner-sub-card">
+      <div class="osc-title">Teks Pengenalan</div>
+      <div class="field"><label for="webIntroTitle">judul</label><input type="text" id="webIntroTitle" /></div>
+      <div class="field"><label for="webIntroSubtitle">subjudul</label><input type="text" id="webIntroSubtitle" /></div>
+      <div class="field"><label for="webIntroBody">isi</label><textarea id="webIntroBody"></textarea></div>
+    </div>
+    <div class="owner-sub-card">
+      <div class="osc-title">Teks Hero</div>
+      <div class="field"><label for="webHeroTitle">judul hero</label><input type="text" id="webHeroTitle" /></div>
+      <div class="field"><label for="webHeroTag">tag</label><input type="text" id="webHeroTag" /></div>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top: 8px;"><button class="btn full" id="webSave">simpan</button></div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-backdrop" data-close></div>
+  <div class="modal-card">
+    <div class="modal-head"><div><div class="m-idx" id="modalIdx">PROMPT</div><div class="m-title" id="modalTitle">-</div></div><button class="close-btn" data-close>×</button></div>
+    <div class="modal-body"><div class="codebox" id="modalBody">-</div></div>
+    <div class="modal-foot"><button class="btn ghost" id="modalDownload">unduh .txt</button><button class="btn" id="modalCopy">salin</button></div>
+  </div>
+</div>
+
+<div class="modal" id="notifSheet">
+  <div class="modal-backdrop" data-notif-close></div>
+  <div class="modal-card">
+    <div class="modal-head"><div><div class="m-title">Notifikasi</div><div class="m-idx" id="notifSub">0 baru</div></div><button class="close-btn" data-notif-close>×</button></div>
+    <div class="modal-body" id="notifSheetList"></div>
+    <div class="modal-foot"><button class="btn ghost" id="notifMarkAll">tandai dibaca</button></div>
+  </div>
+</div>
+
+<div class="music-widget" id="musicWidget">
+  <button class="mw-btn" id="mwToggle"><svg id="mwPlayIcon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg><svg id="mwPauseIcon" viewBox="0 0 24 24" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></button>
+  <div class="mw-info"><div class="mw-title" id="mwTitle">musik</div><div class="mw-sub" id="mwSub">tap play</div></div>
+  <button class="mw-close" id="mwClose">×</button>
+</div>
+<audio id="audioPlayer" loop preload="none"></audio>
+
+<div id="toastStack" class="toast-stack"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
