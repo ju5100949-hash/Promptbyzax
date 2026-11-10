@@ -1,2 +1,0 @@
-# Promptbyzax
-Hmm
